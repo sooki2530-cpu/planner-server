@@ -161,15 +161,26 @@ function summarize(d) {
   const weekKeys = [...Array(7)].map((_, i) => { const dt = new Date(); dt.setDate(dt.getDate() - i); return dt.toISOString().slice(0, 10); });
   const weekDone = (d.focuses || []).filter(f => f.done && weekKeys.includes(f.date)).length;
   lines.push(`Focuses finished in the last 7 days: ${weekDone}.`);
-  // today's schedule
-  const wd = new Date(today + 'T00:00').getDay();
-  const sched = (d.schedule || []).filter(s => s.repeatWeekly ? (s.weekday === wd && (!s.start || today >= s.start)) : s.date === today)
-    .sort((a, b) => (a.from || '').localeCompare(b.from || ''));
-  if (sched.length) {
-    lines.push('Today scheduled: ' + sched.map(s => `${s.from}-${s.to} ${s.desc} (${s.type})`).join('; '));
-  } else {
-    lines.push('Nothing scheduled today.');
+  // schedule for today + the next 7 days (so nothing gets missed)
+  const allBlocks = d.schedule || [];
+  const blocksOn = (k) => {
+    const w = new Date(k + 'T00:00').getDay();
+    return allBlocks.filter(s => s.repeatWeekly ? (s.weekday === w && (!s.start || k >= s.start)) : s.date === k)
+      .sort((a, b) => (a.from || '').localeCompare(b.from || ''));
+  };
+  const schedLines = [];
+  for (let i = 0; i < 8; i++) {
+    const dt = new Date(); dt.setDate(dt.getDate() + i);
+    const k = dt.toISOString().slice(0, 10);
+    const blocks = blocksOn(k);
+    if (blocks.length) {
+      const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : dt.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+      schedLines.push(`${label}: ` + blocks.map(s => `${s.from}-${s.to} ${s.desc} (${s.type})`).join('; '));
+    }
   }
+  const todayBlocks = blocksOn(today);
+  lines.push(todayBlocks.length ? `Today's schedule: ` + todayBlocks.map(s => `${s.from}-${s.to} ${s.desc} (${s.type})`).join('; ') : 'Nothing scheduled for today specifically.');
+  lines.push(schedLines.length ? 'Schedule over the next week:\n' + schedLines.join('\n') : 'No schedule blocks in the next week. (Total blocks saved: ' + allBlocks.length + ')');
   // assignments
   const open = (d.assignments || []).filter(a => !a.done);
   const overdue = open.filter(a => a.due && a.due < today);
