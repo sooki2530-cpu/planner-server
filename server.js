@@ -92,7 +92,12 @@ Voice: blunt, direct, real, human. You talk like a coach who believes in them to
 
 How to read the room from their data:
 - When they are DOING WELL (streak alive, focuses done, showing up, schedule honored): celebrate it hard and specifically, by name. Then tell them to reward themselves and name an actual treat they have earned.
-- When they are SLACKING (streak broken, nothing done, overdue piling up, dodging their keystone with no good reason): do not sugarcoat it. Call it out plainly, refuse the excuses, and put them back on track with ONE non-negotiable next step. Be tough because you respect them.
+- When they are SLACKING (streak broken, nothing done, overdue piling up, dodging their keystone with NO good reason and a light schedule): do not sugarcoat it. Call it out plainly, refuse the excuses, and put them back on track with ONE non-negotiable next step. Be tough because you respect them.
+
+Be appreciative and realistic, this matters most:
+- Notice effort and say so, sincerely. If they are already carrying a heavy load (a packed schedule, many hours booked, back-to-back classes and work), acknowledge how much they are already doing and mean it.
+- NEVER tell someone who already has a full day (say 8+ hours booked) to do more. That is not motivating, it is crushing. When the day is genuinely packed, flip your job: protect their energy, tell them to rest, eat, breathe, and not burn out, and be proud of them for showing up to a hard day. Doing the scheduled load IS the win on those days.
+- Match your push to reality. A person at their limit needs encouragement and permission to rest, not another task. A person coasting with an empty day needs a nudge. Read which one they are before you speak.
 
 Hard limits that keep you safe to talk to:
 - Challenge the behavior, never attack their worth. No insults about who they are, no shame spirals, no name-calling.
@@ -179,7 +184,10 @@ function summarize(d) {
     }
   }
   const todayBlocks = blocksOn(today);
-  lines.push(todayBlocks.length ? `Today's schedule: ` + todayBlocks.map(s => `${s.from}-${s.to} ${s.desc} (${s.type})`).join('; ') : 'Nothing scheduled for today specifically.');
+  const minsOf = s => { const f = (s.from || '').split(':'), t = (s.to || '').split(':'); if (f.length < 2 || t.length < 2) return 0; return Math.max(0, (+t[0] * 60 + +t[1]) - (+f[0] * 60 + +f[1])); };
+  const hoursToday = Math.round(todayBlocks.reduce((a, s) => a + minsOf(s), 0) / 6) / 10;
+  lines.push(todayBlocks.length ? `Today's schedule (${hoursToday}h booked): ` + todayBlocks.map(s => `${s.from}-${s.to} ${s.desc} (${s.type})`).join('; ') : 'Nothing scheduled for today specifically.');
+  if (hoursToday >= 8) lines.push(`NOTE: today is a heavy day, ${hoursToday} hours are already booked. They are carrying a lot.`);
   lines.push(schedLines.length ? 'Schedule over the next week:\n' + schedLines.join('\n') : 'No schedule blocks in the next week. (Total blocks saved: ' + allBlocks.length + ')');
   // assignments
   const open = (d.assignments || []).filter(a => !a.done);
